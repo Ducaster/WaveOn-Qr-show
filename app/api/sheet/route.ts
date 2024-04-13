@@ -53,6 +53,7 @@ export async function GET() {
       data.push(rowData);
     }
 
+    console.log(data);
     const jsonResult = transformDataToJSON(data);
     console.log(jsonResult);
     return NextResponse.json({ success: true, data: data }, { status: 200 });
@@ -67,18 +68,32 @@ export async function GET() {
 
 function transformDataToJSON(data: any[]) {
   const keys = data[0]; // 첫 번째 행은 키 배열
-  const jsonData: { [key: string]: any }[] = [];
+  const jsonData: Record<string, any>[] = [];
 
-  // 데이터 행을 순회
+  // 첫 번째 행에서 날짜 열 변환
+  for (let j = 1; j < keys.length; j++) {
+    keys[j] = excelDateToJSDate(keys[j]).toISOString().split("T")[0];
+  }
+
+  // 나머지 데이터 행 처리
   for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const obj: { [key: string]: any } = {};
-    // 각 행의 각 열을 순회하여 객체를 생성
-    for (let j = 0; j < row.length; j++) {
-      obj[keys[j]] = row[j];
+    const obj: Record<string, any> = {}; // Explicitly define the type of obj
+    for (let j = 0; j < data[i].length; j++) {
+      // 숫자 데이터 백분율로 변환
+      if (typeof data[i][j] === "number") {
+        obj[keys[j]] = `${(data[i][j] * 100).toFixed(1)}%`;
+      } else {
+        obj[keys[j]] = data[i][j];
+      }
     }
     jsonData.push(obj);
   }
 
   return jsonData;
+}
+
+function excelDateToJSDate(serial: number) {
+  const utc_days = Math.floor(serial - 25569);
+
+  return new Date(utc_days * 86400000);
 }

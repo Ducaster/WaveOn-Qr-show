@@ -53,10 +53,11 @@ export async function GET() {
       data.push(rowData);
     }
 
-    console.log(data);
     const jsonResult = transformDataToJSON(data);
-    console.log(jsonResult);
-    return NextResponse.json({ success: true, data: data }, { status: 200 });
+    return NextResponse.json(
+      { success: true, data: jsonResult },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error accessing spreadsheet:", error);
     return NextResponse.json(
